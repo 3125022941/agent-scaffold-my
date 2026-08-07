@@ -64,6 +64,7 @@ public class AIAgentConfigTableVO {
             public static class stdioServerParameters {
                 private String name;
                 private Integer requestTimeout = 3000;
+                private ServerParameters serverParameters;
 
                 // 启动服务时的命令参数
                 @Data

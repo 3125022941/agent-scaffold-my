@@ -10,6 +10,7 @@ import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
 import org.example.domain.agent.service.armory.node.RootNode;
 import org.jvnet.hk2.annotations.Service;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 
 import java.util.HashMap;
@@ -30,11 +31,13 @@ public class DefaultArmoryFactory {
     public static class DynamicContext{
 
         private OpenAiApi openAiApi;
+        private ChatModel chatModel;
 
-        private Map<String,Object>dataObjects=new HashMap<>();
+        private Map<String,Object>dataObjects=new HashMap<>(); //用一个名字key，保存任意对象object
 
+        //把任意类型数据，用key保存到map里
         public <T>void setValue(String key,T value){dataObjects.put(key,value);}
-
+        //根据key把数据取出来，并自动转换成你需要的类型
         public <T> T getValue(String key){return (T)dataObjects.get(key);}
 
     }
