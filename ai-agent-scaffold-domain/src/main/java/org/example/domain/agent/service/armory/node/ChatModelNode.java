@@ -9,6 +9,7 @@ import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.spec.McpSchema;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.example.domain.agent.model.entity.ArmoryCommandEntity;
@@ -33,6 +34,9 @@ import java.util.List;
 @Slf4j
 @Service
 public class ChatModelNode extends AbstractArmorySupport {
+    @Resource
+    private AgentNode agentNode;
+
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
         log.info("Ai Agent 装配工作 - ChatModelNode");
