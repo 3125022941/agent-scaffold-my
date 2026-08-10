@@ -2,6 +2,7 @@ package org.example.domain.agent.service.armory.factory;
 
 import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
 import com.google.adk.agents.BaseAgent;
+import com.google.adk.agents.SequentialAgent;
 import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,7 +34,10 @@ public class DefaultArmoryFactory {
     public static class DynamicContext{
 
         private OpenAiApi openAiApi;
+
         private ChatModel chatModel;
+
+        private SequentialAgent sequentialAgent; //当作最后一个智能体节点
         /*
         * 智能体配置组
         * */

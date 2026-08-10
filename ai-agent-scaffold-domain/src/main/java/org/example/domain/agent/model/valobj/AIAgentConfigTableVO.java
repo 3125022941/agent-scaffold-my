@@ -19,6 +19,9 @@ public class AIAgentConfigTableVO {
         private String agentId;
         private String agentName;
         private String agentDesc;
+
+        public void getagentDesc() {
+        }
     }
 
     // 模块配置分组
