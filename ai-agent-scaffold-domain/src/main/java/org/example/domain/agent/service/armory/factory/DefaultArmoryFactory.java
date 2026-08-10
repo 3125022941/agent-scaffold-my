@@ -15,10 +15,8 @@ import org.jvnet.hk2.annotations.Service;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 @Service
 public class DefaultArmoryFactory {
 
@@ -48,5 +46,18 @@ public class DefaultArmoryFactory {
         //根据key把数据取出来，并自动转换成你需要的类型
         public <T> T getValue(String key){return (T)dataObjects.get(key);}
 
+        public List<BaseAgent>queryAgentList(List<String>agentName){
+            if(agentNames==null||agentName.isEmpty()||agentGroup==Null){
+                return Collections.emptyList();
+            }
+            List<BaseAgent>agents=new ArrayList<>();
+            for(String name:agentNames){
+                BaseAgent agent=agentGroup.get(name);
+                if(agent!=null){
+                    agent.add(agent);
+                }
+            }
+            return agents;
+        }
     }
 }

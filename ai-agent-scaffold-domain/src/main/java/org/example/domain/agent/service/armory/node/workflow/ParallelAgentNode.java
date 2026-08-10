@@ -1,6 +1,8 @@
 package org.example.domain.agent.service.armory.node.workflow;
 
 import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
+import com.google.adk.agents.BaseAgent;
+import com.google.adk.agents.ParallelAgent;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
@@ -16,7 +18,22 @@ import java.util.List;
 public class ParallelAgentNode extends AbstractArmorySupport {
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
-        return null;
+        log.info("Ai AGENT 装配操作 -parallelAgentNode");
+
+        List<AIAgentConfigTableVO.Module.AgentWorkflow>agentWorkflows=dynamicContext.getAgentWorkflows();
+        AIAgentConfigTableVO.Module.AgentWorkflow agentWorkflow = agentWorkflows.remove(0);
+
+        List<String>subAgent=agentWorkflow.getSubAgents();
+        List<BaseAgent> subAgents = dynamicContext.queryAgentList(subAgent);
+
+        ParallelAgent parallelAgent=
+                ParallelAgent.builder()
+                        .name(agentWorkflow.getName())
+                        .description(agentWorkflow.getDescription())
+                        .subAgents(subAgents)
+                        .build();
+        dynamicContext.getAgentGroup().put(agentWorkflow.getName(),parallelAgent);
+        return router(requestParameter,dynamicContext);
     }
 
     @Override
