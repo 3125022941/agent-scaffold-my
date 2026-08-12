@@ -29,6 +29,7 @@ public class AIAgentConfigTableVO {
         private ChatModel chatModel;
         private List<Agent> agents;
         private List<AgentWorkflow> agentWorkflows;
+        private Runner runner;
 
         // AI 接口相关配置
         @Data
@@ -94,6 +95,11 @@ public class AIAgentConfigTableVO {
             private List<String> subAgents;
             private String description;
             private Integer maxIterations = 3;
+        }
+
+        @Data
+        public static class Runner{
+            private String agentName;
         }
     }
 }

@@ -1,7 +1,6 @@
 package org.example.config;
 
 import jakarta.annotation.Resource;
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.agent.model.valobj.properties.AiAgentAutoConfigPropertes;
 import org.example.domain.agent.service.IArmoryService;
@@ -24,7 +23,7 @@ public class AiAgentAutoConfig implements ApplicationListener<ApplicationReadyEv
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event){
         try{
-            log.info("Ai Agent 智能体装配{}", JSON.toJSONString(aiAgentAutoConfigPropertes.getTables().values()));
+            log.info("Ai Agent 智能体装配，配置表: {}", aiAgentAutoConfigPropertes.getTables().keySet());
 
             armoryService.acceptArmoryAgents(new ArrayList<>(aiAgentAutoConfigPropertes.getTables().values()));
         } catch (Exception e){

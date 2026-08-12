@@ -27,29 +27,25 @@ public class SequentialAgentNode extends AbstractArmorySupport {
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
         log.info("Ai AGENT 装配操作 -sequentialAgentNode");
 
-        List<AIAgentConfigTableVO.Module.AgentWorkflow> agentWorkflows=dynamicContext.getAgentWorkflows();
-        AIAgentConfigTableVO.Module.AgentWorkflow agentWorkflow = agentWorkflows.remove(0);
+        AIAgentConfigTableVO.Module.AgentWorkflow currentAgentWorkflow = dynamicContext.getCurrentAgentWorkflow();
 
-        List<String>subAgent=agentWorkflow.getSubAgents();
+        List<String>subAgent=currentAgentWorkflow.getSubAgents();
         List<BaseAgent> subAgents = dynamicContext.queryAgentList(subAgent);
 
         SequentialAgent sequentialAgent=
                 SequentialAgent.builder()
-                        .name(agentWorkflow.getName())
-                                .description(agentWorkflow.getDescription())
+                        .name(currentAgentWorkflow.getName())
+                                .description(currentAgentWorkflow.getDescription())
                                         .subAgents(subAgents)
                                                 .build();
 
-        dynamicContext.getAgentGroup().put(agentWorkflow.getName(),sequentialAgent);
-        dynamicContext.setSequentialAgent(sequentialAgent);//设置到上下文对象
-        //注册到spring容器
-        registerBean(agentWorkflow.getName(),SequentialAgent.class,sequentialAgent);
+        dynamicContext.getAgentGroup().put(currentAgentWorkflow.getName(),sequentialAgent);
 
         return router(requestParameter,dynamicContext);
     }
 
     @Override
     public StrategyHandler<ArmoryCommandEntity, DefaultArmoryFactory.DynamicContext, AiAgentRegisterVO> get(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
-        return runnerNode;
+        return getBean("agentWorkflowNode");
     }
 }

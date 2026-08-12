@@ -17,6 +17,7 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class DefaultArmoryFactory {
@@ -37,14 +38,15 @@ public class DefaultArmoryFactory {
 
         private ChatModel chatModel;
 
-        private SequentialAgent sequentialAgent; //当作最后一个智能体节点
         /*
         * 智能体配置组
         * */
         private Map<String, BaseAgent> agentGroup = new HashMap<>();
 
         private Map<String,Object>dataObjects=new HashMap<>(); //用一个名字key，保存任意对象object
-        private List<AIAgentConfigTableVO.Module.AgentWorkflow> agentWorkflows=new ArrayList<>();
+        private AtomicInteger currentStepIndex=new AtomicInteger(0);
+        private AIAgentConfigTableVO.Module.AgentWorkflow currentAgentWorkflow;
+
         //把任意类型数据，用key保存到map里
         public <T>void setValue(String key,T value){dataObjects.put(key,value);}
         //根据key把数据取出来，并自动转换成你需要的类型
@@ -62,6 +64,12 @@ public class DefaultArmoryFactory {
                 }
             }
             return agents;
+        }
+        public void addCurrentStepIndex(){
+            CurrentStepIndex.incrementAndGet();
+        }
+        public int getCurrentStepIndex(){
+            return currentStepIndex.get();
         }
     }
 }

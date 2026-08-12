@@ -25,25 +25,34 @@ public class AgentWorkflowNode extends AbstractArmorySupport {
     private ParallelAgentNode parallelAgentNode;
     @Resource
     private SequentialAgentNode sequentialAgentNode;
+    @Resource
+    private RunnerNode runnerNode;
+
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
         log.info("Ai Agent 装配操作 -AgentNode");
         AIAgentConfigTableVO aiAgentConfigTableVO = requestParameter.getAiAgentConfigTableVO();
         List<AIAgentConfigTableVO.Module.AgentWorkflow> agentWorkflows =aiAgentConfigTableVO.getModule().getAgentWorkflows();
 
-        if (null==agentWorkflows||agentWorkflows.isEmpty()){
-           throw new RuntimeException("agentWorkflows is null");
+        if (null==agentWorkflows||agentWorkflows.isEmpty()||dynamicContext.getCurrentStepIndex()>=agentWorkflows.size()){
+            dynamicContext.setCurrentAgentWorkflow(null);
+            return router(requestParameter,dynamicContext);
         }
-        dynamicContext.setAgentWorkflows(agentWorkflows);
+        dynamicContext.setCurrentAgentWorkflow(agentWorkflows.get(dynamicContext.getCurrentStepIndex()));
+        //步骤值增加
+        dynamicContext.addCurrentStepIndex();
         return router(requestParameter,dynamicContext);
     }
 
     @Override
     public StrategyHandler<ArmoryCommandEntity, DefaultArmoryFactory.DynamicContext, AiAgentRegisterVO> get(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
-        List<AIAgentConfigTableVO.Module.AgentWorkflow> agentWorkflows = dynamicContext.getAgentWorkflows();
-        AIAgentConfigTableVO.Module.AgentWorkflow agentWorkflow = agentWorkflows.get(0);
+        AIAgentConfigTableVO.Module.AgentWorkflow currentAgentWorkflow=dynamicContext.getCurrentAgentWorkflow();
+        if (null==currentAgentWorkflow){
+            return runnerNode;
+        }
 
-        String type = agentWorkflow.getType();
+
+        String type = currentAgentWorkflow.getType();
         AgentTypeEnum agentTypeEnum=AgentTypeEnum.formType(type);
         if(null==agentTypeEnum){
             throw new RuntimeException("agentWork type is error!");
@@ -54,7 +63,7 @@ public class AgentWorkflowNode extends AbstractArmorySupport {
             case "loopAgentNode" -> loopAgentNode;
             case "parallelAgentNode" ->parallelAgentNode;
             case "sequentialAgentNode" ->sequentialAgentNode;
-            default -> defaultStrategyHandler;
+            default -> runnerNode;
         };
     }
 }
