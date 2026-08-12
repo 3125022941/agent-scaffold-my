@@ -1,9 +1,9 @@
-package org.example.domain.agent.service.armory.mcp.client.impl;
+package org.example.domain.agent.service.armory.matter.mcp.client.impl;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
-import org.example.domain.agent.service.armory.mcp.client.ToolMcpCreateService;
+import org.example.domain.agent.service.armory.matter.mcp.client.ToolMcpCreateService;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.context.ApplicationContext;

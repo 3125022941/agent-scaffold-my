@@ -1,4 +1,4 @@
-package org.example.domain.agent.service.armory.mcp.client.impl;
+package org.example.domain.agent.service.armory.matter.mcp.client.impl;
 
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
@@ -7,12 +7,11 @@ import io.modelcontextprotocol.spec.McpSchema;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
-import org.example.domain.agent.service.armory.mcp.client.ToolMcpCreateService;
+import org.example.domain.agent.service.armory.matter.mcp.client.ToolMcpCreateService;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 

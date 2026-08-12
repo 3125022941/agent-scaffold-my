@@ -106,6 +106,7 @@ public class AIAgentConfigTableVO {
         @Data
         public static class Runner{
             private String agentName;
+            private List<String>pluginNameList;
         }
     }
 }
