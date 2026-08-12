@@ -6,12 +6,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
+import org.example.domain.agent.model.valobj.enums.AgentTypeEnum;
 import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
 import org.example.domain.agent.service.armory.node.workflow.LoopAgentNode;
 import org.example.domain.agent.service.armory.node.workflow.ParallelAgentNode;
 import org.example.domain.agent.service.armory.node.workflow.SequentialAgentNode;
-import org.jvnet.hk2.annotations.Service;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 

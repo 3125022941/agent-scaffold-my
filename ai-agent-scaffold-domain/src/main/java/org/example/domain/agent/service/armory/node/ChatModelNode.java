@@ -17,18 +17,17 @@ import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
 import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
-import org.jvnet.hk2.annotations.Service;
+import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -46,10 +45,15 @@ public class ChatModelNode extends AbstractArmorySupport {
         AIAgentConfigTableVO aiAgentConfigTableVO = requestParameter.getAiAgentConfigTableVO();
         AIAgentConfigTableVO.Module.ChatModel chatModelConfig = aiAgentConfigTableVO.getModule().getChatModel();
 
-        List<McpSyncClient>mcpSyncClients=new ArrayList<>();
+        List<McpSyncClient> mcpSyncClients = new ArrayList<>();
         List<AIAgentConfigTableVO.Module.ChatModel.ToolMcp> toolMcpList = chatModelConfig.getToolMcpList();
-        for (AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp :toolMcpList){
-            mcpSyncClients.add(createMcpSyncClient(toolMcp));
+        for (AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp :
+                toolMcpList == null ? Collections.<AIAgentConfigTableVO.Module.ChatModel.ToolMcp>emptyList() : toolMcpList) {
+            try {
+                mcpSyncClients.add(createMcpSyncClient(toolMcp));
+            } catch (Exception e) {
+                log.warn("MCP tool [{}] is unavailable and will be skipped: {}", getToolName(toolMcp), e.getMessage());
+            }
         }
         ChatModel chatModel= OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
@@ -67,8 +71,9 @@ public class ChatModelNode extends AbstractArmorySupport {
 
     @Override
     public StrategyHandler<ArmoryCommandEntity, DefaultArmoryFactory.DynamicContext, AiAgentRegisterVO> get(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
-        return null;
+        return agentNode;
     }
+
     private McpSyncClient createMcpSyncClient(AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp) throws Exception {
         AIAgentConfigTableVO.Module.ChatModel.SSEServerParameters sseConfig = toolMcp.getSse();
         AIAgentConfigTableVO.Module.ChatModel.stdioServerParameters stdioConfig = toolMcp.getStdio();
@@ -118,8 +123,18 @@ public class ChatModelNode extends AbstractArmorySupport {
                     .requestTimeout(Duration.ofSeconds(stdioConfig.getRequestTimeout())).build();
             McpSchema.InitializeResult initialize = mcpSyncClient.initialize();
             log.info("tool stdio mcp initialize{}", initialize);
-
+            return mcpSyncClient;
         }
-        throw new RuntimeException("tool mcp sse and stdio is null!");
+        throw new IllegalArgumentException("tool mcp sse and stdio are both null");
+    }
+
+    private String getToolName(AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp) {
+        if (toolMcp.getSse() != null) {
+            return toolMcp.getSse().getName();
+        }
+        if (toolMcp.getStdio() != null) {
+            return toolMcp.getStdio().getName();
+        }
+        return "unknown";
     }
 }

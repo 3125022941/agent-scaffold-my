@@ -9,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
+import org.example.domain.agent.model.valobj.enums.AgentTypeEnum;
 import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
-import org.jvnet.hk2.annotations.Service;
+import org.example.domain.agent.service.armory.node.RunnerNode;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -19,7 +21,7 @@ import java.util.List;
 @Service("sequentialAgentNode")
 public class SequentialAgentNode extends AbstractArmorySupport {
     @Resource
-    private RunerNode runerNode;
+    private RunnerNode runnerNode;
 
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
@@ -29,7 +31,7 @@ public class SequentialAgentNode extends AbstractArmorySupport {
         AIAgentConfigTableVO.Module.AgentWorkflow agentWorkflow = agentWorkflows.remove(0);
 
         List<String>subAgent=agentWorkflow.getSubAgents();
-        List<BaseAgent> subAgents = dynamicContext.queryAgentList(subAgentNames);
+        List<BaseAgent> subAgents = dynamicContext.queryAgentList(subAgent);
 
         SequentialAgent sequentialAgent=
                 SequentialAgent.builder()
@@ -48,6 +50,6 @@ public class SequentialAgentNode extends AbstractArmorySupport {
 
     @Override
     public StrategyHandler<ArmoryCommandEntity, DefaultArmoryFactory.DynamicContext, AiAgentRegisterVO> get(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
-        return runerNode;
+        return runnerNode;
     }
 }

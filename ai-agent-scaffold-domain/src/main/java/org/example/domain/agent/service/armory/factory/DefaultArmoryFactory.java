@@ -12,9 +12,9 @@ import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
 import org.example.domain.agent.service.armory.node.RootNode;
-import org.jvnet.hk2.annotations.Service;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 
@@ -50,15 +50,15 @@ public class DefaultArmoryFactory {
         //根据key把数据取出来，并自动转换成你需要的类型
         public <T> T getValue(String key){return (T)dataObjects.get(key);}
 
-        public List<BaseAgent>queryAgentList(List<String>agentName){
-            if(agentNames==null||agentName.isEmpty()||agentGroup==Null){
+        public List<BaseAgent> queryAgentList(List<String> agentNames) {
+            if (agentNames == null || agentNames.isEmpty() || agentGroup == null) {
                 return Collections.emptyList();
             }
-            List<BaseAgent>agents=new ArrayList<>();
-            for(String name:agentNames){
-                BaseAgent agent=agentGroup.get(name);
-                if(agent!=null){
-                    agent.add(agent);
+            List<BaseAgent> agents = new ArrayList<>();
+            for (String name : agentNames) {
+                BaseAgent agent = agentGroup.get(name);
+                if (agent != null) {
+                    agents.add(agent);
                 }
             }
             return agents;

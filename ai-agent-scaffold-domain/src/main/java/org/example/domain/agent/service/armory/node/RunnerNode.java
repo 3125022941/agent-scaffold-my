@@ -9,7 +9,7 @@ import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
 import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
-import org.jvnet.hk2.annotations.Service;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -35,7 +35,7 @@ public class RunnerNode extends AbstractArmorySupport {
                 .runner(runner)
                 .build();
         //注册到spring容器
-        registerBean(agentId,AiAgentRegisterVO.class,aiAgentConfigTableVO);
+        registerBean(agentId, AiAgentRegisterVO.class, aiAgentRegisterVO);
 
         return aiAgentRegisterVO;
     }
