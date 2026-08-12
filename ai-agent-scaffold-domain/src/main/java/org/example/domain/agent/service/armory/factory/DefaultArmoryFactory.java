@@ -66,7 +66,7 @@ public class DefaultArmoryFactory {
             return agents;
         }
         public void addCurrentStepIndex(){
-            CurrentStepIndex.incrementAndGet();
+            currentStepIndex.incrementAndGet();
         }
         public int getCurrentStepIndex(){
             return currentStepIndex.get();

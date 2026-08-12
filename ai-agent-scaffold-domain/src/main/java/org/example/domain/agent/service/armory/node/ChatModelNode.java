@@ -1,33 +1,23 @@
 package org.example.domain.agent.service.armory.node;
 
 import cn.bugstack.wrench.design.framework.tree.StrategyHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.client.McpClient;
-import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
-import io.modelcontextprotocol.client.transport.ServerParameters;
-import io.modelcontextprotocol.client.transport.StdioClientTransport;
-import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
-import io.modelcontextprotocol.spec.McpSchema;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.example.domain.agent.model.entity.ArmoryCommandEntity;
 import org.example.domain.agent.model.valobj.AIAgentConfigTableVO;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
 import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
+import org.example.domain.agent.service.armory.mcp.client.ToolMcpCreateService;
+import org.example.domain.agent.service.armory.mcp.client.factory.DefaultMcpClientFactory;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 
-import java.net.URL;
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -35,33 +25,38 @@ import java.util.List;
 public class ChatModelNode extends AbstractArmorySupport {
     @Resource
     private AgentNode agentNode;
+    @Resource
+    private DefaultMcpClientFactory defaultMcpClientFactory;
 
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
         log.info("Ai Agent 装配工作 - ChatModelNode");
-
+        //获取上下文对象
         OpenAiApi openAiApi = dynamicContext.getOpenAiApi();
-
+        //获取配置对象
         AIAgentConfigTableVO aiAgentConfigTableVO = requestParameter.getAiAgentConfigTableVO();
         AIAgentConfigTableVO.Module.ChatModel chatModelConfig = aiAgentConfigTableVO.getModule().getChatModel();
 
-        List<McpSyncClient> mcpSyncClients = new ArrayList<>();
+        //构建mcp服务（工厂）
+        List<ToolCallback> toolCallbackList = new ArrayList<>();
         List<AIAgentConfigTableVO.Module.ChatModel.ToolMcp> toolMcpList = chatModelConfig.getToolMcpList();
-        for (AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp :
-                toolMcpList == null ? Collections.<AIAgentConfigTableVO.Module.ChatModel.ToolMcp>emptyList() : toolMcpList) {
-            try {
-                mcpSyncClients.add(createMcpSyncClient(toolMcp));
-            } catch (Exception e) {
-                log.warn("MCP tool [{}] is unavailable and will be skipped: {}", getToolName(toolMcp), e.getMessage());
+        if (toolMcpList != null) {
+            for (AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp : toolMcpList) {
+                try {
+                    ToolMcpCreateService toolMcpCreateService = defaultMcpClientFactory.getToolMcpCreateService(toolMcp);
+                    ToolCallback[] toolCallbacks = toolMcpCreateService.buildToolCallback(toolMcp);
+                    toolCallbackList.addAll(List.of(toolCallbacks));
+                } catch (Exception e) {
+                    log.warn("跳过不可用的 MCP 工具，模型将继续启动: {}", e.getMessage());
+                }
             }
         }
+       //构建对话模型
         ChatModel chatModel= OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(OpenAiChatOptions.builder()
                         .model(chatModelConfig.getModel())
-                        .toolCallbacks(SyncMcpToolCallbackProvider.builder()
-                        .mcpClients(mcpSyncClients).build()
-                                .getToolCallbacks())
+                        .toolCallbacks(toolCallbackList)
                         .build())
                 .build();
         dynamicContext.setChatModel(chatModel);
@@ -74,67 +69,8 @@ public class ChatModelNode extends AbstractArmorySupport {
         return agentNode;
     }
 
-    private McpSyncClient createMcpSyncClient(AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp) throws Exception {
-        AIAgentConfigTableVO.Module.ChatModel.SSEServerParameters sseConfig = toolMcp.getSse();
-        AIAgentConfigTableVO.Module.ChatModel.stdioServerParameters stdioConfig = toolMcp.getStdio();
-
-        if (null !=sseConfig){
-            // http://appbuilder.baidu.com/v2/ai_search/mcp/sse?api key=
-
-            String originalBaseUri=sseConfig.getBaseUri();
-            String baseUri = originalBaseUri;
-            String sseEndpoint=sseConfig.getSseEndpoint();
-            if (StringUtils.isBlank(sseEndpoint)){
-                URL url = new URL(originalBaseUri);
-
-                String protocol = url.getProtocol();
-                String host = url.getHost();
-                int port = url.getPort();
-
-                String baseUrl=port ==-1?protocol+"://"+host:protocol+"://"+host+":"+port;
 
 
-                int index = originalBaseUri.indexOf(baseUrl);
-                if(index!=-1){
-                    sseEndpoint=originalBaseUri.substring(index+baseUrl.length());
-                }
-                baseUri=baseUrl;
-            }
-            sseEndpoint=StringUtils.isBlank(sseEndpoint)?"/sse":sseEndpoint;
-            HttpClientSseClientTransport sseClientTransport = HttpClientSseClientTransport
-                    .builder(baseUri)
-                    .sseEndpoint(sseEndpoint)
-                    .build();
-            McpSyncClient  mcpSyncClient = McpClient
-                    .sync(sseClientTransport)
-                    .requestTimeout(Duration.ofMillis(sseConfig.getRequestTimeout())).build();
-            McpSchema.InitializeResult initialize = mcpSyncClient.initialize();
-            log.info("tool sse mcp initialize{}",initialize);
-            return mcpSyncClient;
-        }
-        if(null!=stdioConfig){
-            AIAgentConfigTableVO.Module.ChatModel.stdioServerParameters.ServerParameters serverParameters = stdioConfig.getServerParameters();
-            ServerParameters stdioParams = ServerParameters.builder(serverParameters.getCommand())
-                    .args(serverParameters.getArgs())
-                    .env(serverParameters.getEnv())
-                    .build();
-            McpSyncClient mcpSyncClient = McpClient
-                    .sync(new StdioClientTransport(stdioParams, new JacksonMcpJsonMapper(new ObjectMapper())))
-                    .requestTimeout(Duration.ofSeconds(stdioConfig.getRequestTimeout())).build();
-            McpSchema.InitializeResult initialize = mcpSyncClient.initialize();
-            log.info("tool stdio mcp initialize{}", initialize);
-            return mcpSyncClient;
-        }
-        throw new IllegalArgumentException("tool mcp sse and stdio are both null");
-    }
 
-    private String getToolName(AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp) {
-        if (toolMcp.getSse() != null) {
-            return toolMcp.getSse().getName();
-        }
-        if (toolMcp.getStdio() != null) {
-            return toolMcp.getStdio().getName();
-        }
-        return "unknown";
-    }
+
 }

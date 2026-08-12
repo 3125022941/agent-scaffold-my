@@ -50,6 +50,12 @@ public class AIAgentConfigTableVO {
             public static class ToolMcp {
                 private SSEServerParameters sse;
                 private stdioServerParameters stdio;
+                private LocalParameters local;
+            }
+
+            @Data
+            public static class LocalParameters {
+                private String name;
             }
 
             // SSE 方式的服务参数
