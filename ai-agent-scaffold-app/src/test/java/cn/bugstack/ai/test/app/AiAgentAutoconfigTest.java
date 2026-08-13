@@ -1,26 +1,21 @@
 package cn.bugstack.ai.test.app;
 
 import com.alibaba.fastjson.JSON;
-import com.google.adk.events.Event;
-import com.google.adk.runner.InMemoryRunner;
-import com.google.adk.sessions.Session;
-import com.google.genai.types.Content;
-import com.google.genai.types.Part;
-import io.reactivex.rxjava3.core.Flowable;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.example.Application;
 import org.example.domain.agent.model.valobj.AiAgentRegisterVO;
+import org.example.domain.agent.service.IChatService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringRunner.class)
@@ -41,17 +36,12 @@ public class AiAgentAutoconfigTest {
     }
     @Test
     public void test_handlerMessage_03() {
-        AiAgentRegisterVO aiAgentRegisterVO = applicationContext.getBean("100003", AiAgentRegisterVO.class);
-        String appName = aiAgentRegisterVO.getAppName();
-        InMemoryRunner runner=aiAgentRegisterVO.getRunner();
-        Session session=runner.sessionService()
-                .createSession(appName,"xiaofuge")
-                .blockingGet();
-        Content userMsg= Content.fromParts(Part.fromText("把xiaofuge转换为大写"));
-        Flowable<Event>events=runner.runAsync("xiaofuge",session.id(),userMsg);
+        IChatService chatService = applicationContext.getBean(IChatService.class);
+        String sessionId = chatService.createSession("100003", "xiaofuge");
+        List<String> outputs = chatService.handleMessage("100003", "xiaofuge", sessionId,
+                "把xiaofuge转换为大写");
 
-        List<String>outputs=new ArrayList<>();
-        events.blockingForEach(event->outputs.add(event.stringifyContent()));
+        assertFalse(outputs.isEmpty());
         log.info("测试结果:{}", JSON.toJSONString(outputs));
 
     }
