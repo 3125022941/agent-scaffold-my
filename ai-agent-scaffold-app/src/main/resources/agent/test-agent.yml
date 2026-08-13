@@ -11,7 +11,7 @@ ai:
           module:
             ai-api:
               base-url: https://apis.itedus.cn
-              api-key: REMOVED_OPENAI_API_KEY
+              api-key: ${OPENAI_API_KEY:}
               completions-path: v1/chat/completions
               embeddings-path: v1/embeddings
             chat-model:
@@ -20,12 +20,12 @@ ai:
                 - sse:
                     name: baidu-search
                     base-uri: https://appbuilder.baidu.com/v2/ai_search/mcp/
-                    sse-endpoint: sse?api_key=REMOVED_BAIDU_SEARCH_MCP_API_KEY
+                    sse-endpoint: sse?api_key=${BAIDU_SEARCH_MCP_API_KEY:}
                     request-timeout: 5000
                 - sse:
                     name: baidu-map
                     base-uri: https://mcp.map.baidu.com/
-                    sse-endpoint: sse?ak=REMOVED_BAIDU_MAP_MCP_AK
+                    sse-endpoint: sse?ak=${BAIDU_MAP_MCP_AK:}
                     request-timeout: 5000
             agents:
               - name: CodeWriterAgent
