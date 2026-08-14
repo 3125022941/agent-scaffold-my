@@ -10,12 +10,12 @@ ai:
             agent-desc: 单一智能体
           module:
             ai-api:
-              base-url: https://api.deepseek.com
-              api-key: ${DEEPSEEK_API_KEY:}
-              completions-path: chat/completions
+              base-url: https://api.xiaomimimo.com
+              api-key: "${MIMO_API_KEY:sk-c091smhwck8oquky5rrly5qd4zwhthvczdl3sz7thd9or79r}"
+              completions-path: v1/chat/completions
               embeddings-path: v1/embeddings
             chat-model:
-              model: deepseek-v4-flash
+              model: mimo-v2.5
               tool-mcp-list:
                 - sse:
                     name: baidu-search

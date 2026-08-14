@@ -57,10 +57,10 @@ public class ChatService implements IChatService {
             throw new AppException(ResponseCode.E0001.getCode());
         }
 
-        String agentName = aiAgentRegisterVO.getAgentName();
+        String appName = aiAgentRegisterVO.getAppName();
         InMemoryRunner runner=aiAgentRegisterVO.getRunner();
 
-        return userSession.comuteIfAbsent(userId, uid->{
+        return userSession.computeIfAbsent(userId, uid->{
             Session session=runner.sessionService().createSession(appName,uid)
                     .blockingGet();
             return session.id();
@@ -76,7 +76,7 @@ public class ChatService implements IChatService {
         }
         String sessionId = createSession(agentId, userId);
 
-        return handleMessage(agentId,userId,message);
+        return handleMessage(agentId, userId, sessionId, message);
     }
 
     @Override
@@ -110,13 +110,13 @@ public class ChatService implements IChatService {
 
     @Override
     public List<String> handleMessage(ChatCommandEntity chatCommandEntity) {
-        AiAgentRegisterVO aiAgentRegisterVO=defaultArmoryFactory.getAiAgentRegisterVO(chatCommandEntity);
+        AiAgentRegisterVO aiAgentRegisterVO=defaultArmoryFactory.getAiAgentRegisterVO(chatCommandEntity.getAgentId());
         if(null==aiAgentRegisterVO){
             throw new AppException(ResponseCode.E0001.getCode());
         }
         List<Part>parts=new ArrayList<>();
         List<ChatCommandEntity.Content.Text>texts=chatCommandEntity.getTexts();
-        if(null!=texts && texts.isEmpty()){
+        if(null!=texts && !texts.isEmpty()){
             for(ChatCommandEntity.Content.Text text:texts){
                 parts.add(Part.fromText(text.getMessage()));
             }
