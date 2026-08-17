@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
-public class ChatService implements IChatService {
+public class ChatService implements IChatService { //chat服务承诺实现ichat服务规定的所有方法
 
     @Resource
     private DefaultArmoryFactory defaultArmoryFactory;
@@ -38,10 +38,10 @@ public class ChatService implements IChatService {
 
     @Override
     public List<AIAgentConfigTableVO.Agent> queryAiAgentConfig() {
-        Map<String, AIAgentConfigTableVO> tables = aiAgentAutoConfigPropertes.getTables();
-        List<AIAgentConfigTableVO.Agent> agentList = new ArrayList<>();
+        Map<String, AIAgentConfigTableVO> tables = aiAgentAutoConfigPropertes.getTables(); //配置表集合
+        List<AIAgentConfigTableVO.Agent> agentList = new ArrayList<>();//空列表
         if (tables != null) {
-            for (AIAgentConfigTableVO vo : tables.values()) {
+            for (AIAgentConfigTableVO vo : tables.values()) { //从 tables.values() 的所有配置中，每次取一份，叫作 vo。
                 if (null!=vo.getAgent()) {
                     agentList.add(vo.getAgent());
                 }
