@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Agent Workspace | 登录</title>
+    <script src="js/config.js"></script>
+    <style>
+        :root {
+            --ink: #16221e;
+            --muted: #60716a;
+            --line: #d7e1dc;
+            --paper: #f6f8f6;
+            --surface: #ffffff;
+            --forest: #10221c;
+            --forest-soft: #1a382d;
+            --mint: #4fd1aa;
+            --coral: #e97451;
+            --yellow: #f5c965;
+            --focus: #166a50;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(390px, .82fr);
+            min-height: 100vh;
+        }
+
+        .story {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100%;
+            padding: clamp(28px, 3.5vw, 52px);
+            color: #e9f6ef;
+            background: var(--forest);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            color: #e9f6ef;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            color: var(--forest);
+            background: var(--mint);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .story-content {
+            max-width: 660px;
+            margin-top: 42px;
+        }
+
+        .eyebrow {
+            margin: 0 0 16px;
+            color: var(--mint);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+
+        h1 {
+            max-width: 560px;
+            margin: 0;
+            color: #f4fbf7;
+            font-size: clamp(38px, 5vw, 64px);
+            line-height: 1.08;
+            letter-spacing: 0;
+        }
+
+        .intro {
+            max-width: 500px;
+            margin: 20px 0 0;
+            color: #b8d0c3;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .capabilities {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0;
+            margin: 28px 0 0;
+            list-style: none;
+        }
+
+        .capabilities li {
+            padding: 12px;
+            border: 1px solid #345747;
+            border-radius: 6px;
+            color: #d8ede2;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .hero-art {
+            display: block;
+            width: min(100%, 540px);
+            height: auto;
+            margin: 22px auto 0;
+        }
+
+        .story-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 36px;
+            color: #9db9aa;
+            font-size: 12px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .status::before {
+            width: 8px;
+            height: 8px;
+            content: "";
+            background: var(--mint);
+            border-radius: 50%;
+        }
+
+        .signin {
+            display: grid;
+            min-width: 0;
+            padding: clamp(28px, 7vw, 96px) clamp(24px, 7vw, 104px);
+            place-items: center;
+        }
+
+        .signin-inner { width: min(100%, 400px); }
+
+        .signin h2 {
+            margin: 0;
+            color: var(--ink);
+            font-size: 30px;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        .signin-copy {
+            margin: 12px 0 32px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .demo-account {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            margin-bottom: 24px;
+            border: 1px solid #f0d993;
+            border-radius: 6px;
+            color: #6e5110;
+            background: #fff8dd;
+            font-size: 13px;
+        }
+
+        .demo-account strong { color: #4d3908; font-size: 13px; }
+
+        .field { margin-top: 18px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #32433b;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        input {
+            width: 100%;
+            height: 46px;
+            padding: 0 13px;
+            border: 1px solid #b9c9c0;
+            border-radius: 6px;
+            outline: none;
+            color: var(--ink);
+            background: var(--surface);
+            font: inherit;
+            font-size: 15px;
+        }
+
+        input:focus, button:focus-visible {
+            outline: 3px solid #a7e8d0;
+            outline-offset: 2px;
+        }
+
+        input:focus { border-color: var(--focus); }
+
+        .password-field { position: relative; }
+
+        .password-field input { padding-right: 76px; }
+
+        .toggle-password {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            width: 68px;
+            height: 44px;
+            border: 0;
+            border-left: 1px solid var(--line);
+            border-radius: 0 5px 5px 0;
+            color: #225f4b;
+            background: transparent;
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .form-error {
+            min-height: 20px;
+            margin: 14px 0 0;
+            color: #b33f26;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .form-error[hidden] { display: none; }
+
+        .submit {
+            width: 100%;
+            height: 48px;
+            margin-top: 20px;
+            border: 0;
+            border-radius: 6px;
+            color: #082117;
+            background: var(--mint);
+            cursor: pointer;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .submit:hover { background: #38bf95; }
+
+        .signin-footer {
+            margin: 24px 0 0;
+            color: #7a8982;
+            font-size: 12px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .shell { grid-template-columns: 1fr; }
+            .story { min-height: auto; padding: 32px 28px 28px; }
+            .story-content { max-width: 720px; margin-top: 30px; }
+            .hero-art { width: min(100%, 560px); margin-top: 20px; }
+            .signin { min-height: 600px; padding: 56px 28px; }
+        }
+
+        @media (max-width: 520px) {
+            .story { padding: 24px 20px; }
+            h1 { font-size: 38px; }
+            .capabilities { grid-template-columns: 1fr; }
+            .capabilities li { text-align: left; }
+            .story-footer { align-items: flex-start; flex-direction: column; }
+            .signin { min-height: 0; padding: 40px 20px; }
+            .demo-account { align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <section class="story" aria-labelledby="page-title">
+        <div>
+            <div class="brand"><span class="brand-mark" aria-hidden="true">A</span>Agent Workspace</div>
+            <div class="story-content">
+                <p class="eyebrow">AI AGENT CONSOLE</p>
+                <h1 id="page-title">让智能体成为你的工作流中枢。</h1>
+                <p class="intro">连接模型、工具与上下文，为每一个任务配置可执行的智能协作。</p>
+                <ul class="capabilities" aria-label="控制台能力">
+                    <li>多模型编排</li>
+                    <li>工具联动</li>
+                    <li>会话记忆</li>
+                </ul>
+            </div>
+            <img class="hero-art" src="images/ai-hero.svg" alt="AI 智能体连接工具、记忆和会话的工作流效果图">
+        </div>
+        <footer class="story-footer">
+            <span>面向日常智能协作的工作台</span>
+            <span class="status">服务就绪</span>
+        </footer>
+    </section>
+
+    <section class="signin" aria-labelledby="signin-title">
+        <div class="signin-inner">
+            <h2 id="signin-title">登录工作台</h2>
+            <p class="signin-copy">使用你的工作台账号继续。</p>
+            <div class="demo-account" aria-label="演示账号提示">
+                <span>演示账号</span>
+                <strong>admin / admin</strong>
+            </div>
+            <form id="login-form" novalidate>
+                <div class="field">
+                    <label for="username">账号</label>
+                    <input id="username" name="username" type="text" value="admin" autocomplete="username" required>
+                </div>
+                <div class="field">
+                    <label for="password">密码</label>
+                    <div class="password-field">
+                        <input id="password" name="password" type="password" value="admin" autocomplete="current-password" required>
+                        <button id="toggle-password" class="toggle-password" type="button" aria-label="显示密码">显示</button>
+                    </div>
+                </div>
+                <p id="form-error" class="form-error" role="alert" hidden></p>
+                <button class="submit" type="submit">登录控制台</button>
+            </form>
+            <p class="signin-footer">登录后将进入智能体对话工作台。</p>
+        </div>
+    </section>
+</main>
+<script>
+    (() => {
+        const COOKIE_NAME = "ai_agent_login";
+        const COOKIE_MAX_AGE_SECONDS = 8 * 60 * 60;
+        const form = document.getElementById("login-form");
+        const username = document.getElementById("username");
+        const password = document.getElementById("password");
+        const togglePassword = document.getElementById("toggle-password");
+        const formError = document.getElementById("form-error");
+
+        function readCookieValue(name) {
+            const prefix = `${name}=`;
+            const value = document.cookie.split(";").map((item) => item.trim()).find((item) => item.startsWith(prefix));
+            return value ? value.slice(prefix.length) : null;
+        }
+
+        function clearLoginCookie() {
+            document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+        }
+
+        function readLoginCookie() {
+            const rawValue = readCookieValue(COOKIE_NAME);
+            if (!rawValue) {
+                return null;
+            }
+            try {
+                const payload = JSON.parse(decodeURIComponent(rawValue));
+                if (typeof payload.user !== "string" || !payload.user || !Number.isFinite(payload.ts)) {
+                    throw new Error("Invalid login cookie payload");
+                }
+                return payload;
+            } catch (error) {
+                clearLoginCookie();
+                return null;
+            }
+        }
+
+        function writeLoginCookie(user) {
+            const payload = encodeURIComponent(JSON.stringify({ user, ts: Date.now() }));
+            document.cookie = `${COOKIE_NAME}=${payload}; Path=/; Max-Age=${COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+        }
+
+        function showError(message) {
+            formError.textContent = message;
+            formError.hidden = false;
+        }
+
+        function clearError() {
+            formError.textContent = "";
+            formError.hidden = true;
+        }
+
+        if (readLoginCookie()) {
+            window.location.replace("index.html");
+            return;
+        }
+
+        togglePassword.addEventListener("click", () => {
+            const isPassword = password.type === "password";
+            password.type = isPassword ? "text" : "password";
+            togglePassword.textContent = isPassword ? "隐藏" : "显示";
+            togglePassword.setAttribute("aria-label", isPassword ? "隐藏密码" : "显示密码");
+        });
+
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            clearError();
+
+            if (username.value.trim() !== "admin" || password.value !== "admin") {
+                showError("账号或密码不正确，请使用演示账号登录。");
+                password.focus();
+                return;
+            }
+
+            writeLoginCookie("admin");
+            window.location.assign("index.html");
+        });
+    })();
+</script>
+</body>
+</html>

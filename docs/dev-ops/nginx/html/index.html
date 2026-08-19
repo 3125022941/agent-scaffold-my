@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Agent Workspace | 对话</title>
+    <script src="js/config.js"></script>
+    <style>
+        :root {
+            --ink: #16221e;
+            --muted: #60716a;
+            --line: #d7e1dc;
+            --paper: #f4f7f5;
+            --surface: #ffffff;
+            --forest: #10221c;
+            --mint: #4fd1aa;
+            --mint-dark: #12654c;
+            --coral: #e97451;
+            --yellow: #f5c965;
+            --user: #e4f7ee;
+            --agent: #fff6df;
+            --system: #edf1ef;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-width: 320px;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--ink);
+            background: var(--paper);
+            font-family: Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        button, select, textarea { font: inherit; }
+
+        button { cursor: pointer; }
+
+        button:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 3px solid #a7e8d0;
+            outline-offset: 2px;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 292px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .agent-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            padding: 26px 20px;
+            color: #e9f6ef;
+            background: var(--forest);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #f4fbf7;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 28px;
+            height: 28px;
+            place-items: center;
+            border-radius: 6px;
+            color: var(--forest);
+            background: var(--mint);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .panel-label {
+            margin: 0 0 8px;
+            color: #a8c6b9;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .agent-select {
+            width: 100%;
+            min-height: 42px;
+            padding: 0 10px;
+            border: 1px solid #416553;
+            border-radius: 6px;
+            color: #e9f6ef;
+            background: #173227;
+        }
+
+        .agent-select:disabled { cursor: wait; opacity: .65; }
+
+        .agent-description {
+            min-height: 44px;
+            margin: 10px 0 0;
+            color: #b8d0c3;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .new-session {
+            width: 100%;
+            min-height: 42px;
+            border: 1px solid var(--mint);
+            border-radius: 6px;
+            color: var(--mint);
+            background: transparent;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .new-session:hover { color: #072016; background: var(--mint); }
+
+        .session-status {
+            padding: 13px;
+            border: 1px solid #315543;
+            border-radius: 6px;
+            color: #b8d0c3;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .session-status strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #e9f6ef;
+            font-size: 12px;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 18px;
+            margin-top: auto;
+            border-top: 1px solid #315543;
+        }
+
+        .avatar {
+            display: grid;
+            width: 32px;
+            height: 32px;
+            place-items: center;
+            border-radius: 50%;
+            color: #1f3329;
+            background: var(--yellow);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .profile-copy { min-width: 0; flex: 1; }
+
+        .profile-name { display: block; color: #f4fbf7; font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .profile-role { display: block; margin-top: 3px; color: #a8c6b9; font-size: 11px; }
+
+        .logout {
+            padding: 6px 0;
+            border: 0;
+            color: #a8c6b9;
+            background: transparent;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .logout:hover { color: var(--coral); }
+
+        .chat-workspace {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            min-width: 0;
+            min-height: 100vh;
+            background: var(--surface);
+        }
+
+        .workspace-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 82px;
+            padding: 18px clamp(22px, 5vw, 64px);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .workspace-header h1 { margin: 0; font-size: 20px; line-height: 1.2; }
+        .workspace-header p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+
+        .api-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--mint-dark);
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .api-indicator::before {
+            width: 8px;
+            height: 8px;
+            content: "";
+            border-radius: 50%;
+            background: var(--mint);
+        }
+
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 0;
+            padding: 30px clamp(22px, 5vw, 88px);
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            display: grid;
+            width: min(100%, 620px);
+            min-height: 330px;
+            padding: 34px;
+            margin: auto;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .empty-state img { width: min(100%, 320px); height: auto; }
+        .empty-state h2 { margin: 12px 0 7px; color: var(--ink); font-size: 20px; }
+        .empty-state p { max-width: 360px; margin: 0; font-size: 14px; line-height: 1.6; }
+
+        .message-row { display: flex; max-width: min(760px, 86%); }
+        .message-row.user { align-self: flex-start; }
+        .message-row.agent { align-self: flex-end; }
+        .message-row.system { align-self: center; max-width: min(620px, 100%); }
+
+        .message-bubble {
+            padding: 13px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .message-row.user .message-bubble { border: 1px solid #a6ddc8; background: var(--user); }
+        .message-row.agent .message-bubble { border: 1px solid #efd58b; background: var(--agent); }
+        .message-row.system .message-bubble { padding: 9px 13px; color: #52645c; background: var(--system); font-size: 12px; text-align: center; }
+        .message-row.system.error .message-bubble { color: #a53e29; background: #fff0ea; }
+
+        .composer-shell {
+            padding: 16px clamp(22px, 5vw, 64px) 22px;
+            border-top: 1px solid var(--line);
+            background: #fbfcfb;
+        }
+
+        .composer {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 94px;
+            gap: 12px;
+            width: min(100%, 1020px);
+            margin: 0 auto;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 50px;
+            max-height: 160px;
+            padding: 13px;
+            resize: vertical;
+            border: 1px solid #b9c9c0;
+            border-radius: 6px;
+            color: var(--ink);
+            background: #fff;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .send {
+            min-height: 50px;
+            border: 0;
+            border-radius: 6px;
+            color: #062219;
+            background: var(--mint);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .send:hover:not(:disabled) { background: #38bf95; }
+        .send:disabled, .new-session:disabled { cursor: wait; opacity: .55; }
+
+        .composer-note {
+            width: min(100%, 1020px);
+            margin: 9px auto 0;
+            color: #77867f;
+            font-size: 11px;
+        }
+
+        @media (max-width: 800px) {
+            .app-shell { grid-template-columns: 1fr; }
+            .agent-panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 1fr); gap: 18px; padding: 18px 20px; }
+            .brand, .profile { grid-column: 1 / -1; }
+            .profile { display: none; }
+            .agent-panel > div:first-of-type { min-width: 0; }
+            .new-session { align-self: end; }
+            .session-status { grid-column: 1 / -1; }
+            .chat-workspace { min-height: calc(100vh - 296px); }
+        }
+
+        @media (max-width: 520px) {
+            .agent-panel { display: flex; gap: 14px; padding: 18px; }
+            .session-status { display: none; }
+            .workspace-header { min-height: 70px; padding: 15px 18px; }
+            .workspace-header p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .api-indicator { display: none; }
+            .message-list { padding: 20px 18px; }
+            .message-row { max-width: 94%; }
+            .composer-shell { padding: 14px 18px 18px; }
+            .composer { grid-template-columns: 1fr; }
+            .send { min-height: 44px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <aside class="agent-panel" aria-label="智能体与会话">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">A</span>Agent Workspace</div>
+        <div>
+            <p class="panel-label">当前智能体</p>
+            <select id="agent-select" class="agent-select" aria-label="选择智能体" disabled>
+                <option>正在加载智能体...</option>
+            </select>
+            <p id="agent-description" class="agent-description">正在读取可用的智能体配置。</p>
+        </div>
+        <button id="new-session" class="new-session" type="button" disabled>新建会话</button>
+        <div class="session-status"><strong>会话状态</strong><span id="session-id">尚未创建会话</span></div>
+        <div class="profile">
+            <span id="profile-avatar" class="avatar" aria-hidden="true">A</span>
+            <span class="profile-copy"><span id="profile-name" class="profile-name"></span><span class="profile-role">已登录用户</span></span>
+            <button id="logout" class="logout" type="button">退出</button>
+        </div>
+    </aside>
+
+    <main class="chat-workspace">
+        <header class="workspace-header">
+            <div><h1 id="conversation-title">智能体对话</h1><p id="conversation-subtitle">选择智能体后开始新的协作。</p></div>
+            <span class="api-indicator">API 已连接</span>
+        </header>
+        <section id="message-list" class="message-list" aria-live="polite"></section>
+        <div class="composer-shell">
+            <form id="composer" class="composer">
+                <textarea id="message-input" class="message-input" placeholder="输入消息，Enter 发送，Shift + Enter 换行" aria-label="输入对话消息" disabled></textarea>
+                <button id="send" class="send" type="submit" disabled>发送</button>
+            </form>
+            <p class="composer-note">消息将发送到当前选中的智能体。</p>
+        </div>
+    </main>
+</div>
+<script>
+    (() => {
+        const COOKIE_NAME = "ai_agent_login";
+        const API_BASE = window.APP_CONFIG && window.APP_CONFIG.API_BASE;
+        const agentSelect = document.getElementById("agent-select");
+        const agentDescription = document.getElementById("agent-description");
+        const newSessionButton = document.getElementById("new-session");
+        const sessionIdLabel = document.getElementById("session-id");
+        const messageList = document.getElementById("message-list");
+        const composer = document.getElementById("composer");
+        const messageInput = document.getElementById("message-input");
+        const sendButton = document.getElementById("send");
+        const title = document.getElementById("conversation-title");
+        const subtitle = document.getElementById("conversation-subtitle");
+        const profileName = document.getElementById("profile-name");
+        const profileAvatar = document.getElementById("profile-avatar");
+        const logoutButton = document.getElementById("logout");
+        let login;
+        let currentSessionId = null;
+        let busy = false;
+
+        function readCookieValue(name) {
+            const prefix = `${name}=`;
+            const item = document.cookie.split(";").map((value) => value.trim()).find((value) => value.startsWith(prefix));
+            return item ? item.slice(prefix.length) : null;
+        }
+
+        function clearLoginCookie() {
+            document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+        }
+
+        function readLogin() {
+            const raw = readCookieValue(COOKIE_NAME);
+            if (!raw) return null;
+            try {
+                const payload = JSON.parse(decodeURIComponent(raw));
+                return typeof payload.user === "string" && payload.user && Number.isFinite(payload.ts) ? payload : null;
+            } catch (error) {
+                clearLoginCookie();
+                return null;
+            }
+        }
+
+        function renderEmptyState() {
+            messageList.replaceChildren();
+            const state = document.createElement("div");
+            state.className = "empty-state";
+            const illustration = document.createElement("img");
+            illustration.src = "images/ai-hero.svg";
+            illustration.alt = "AI 智能体工作流效果图";
+            const heading = document.createElement("h2");
+            heading.textContent = "开始新的智能协作";
+            const copy = document.createElement("p");
+            copy.textContent = "选择一个智能体，输入消息后即可创建会话并开始对话。";
+            state.append(illustration, heading, copy);
+            messageList.append(state);
+        }
+
+        function appendMessage(kind, content, isError = false) {
+            const row = document.createElement("div");
+            row.className = `message-row ${kind}${isError ? " error" : ""}`;
+            const bubble = document.createElement("div");
+            bubble.className = "message-bubble";
+            bubble.textContent = content;
+            row.append(bubble);
+            const empty = messageList.querySelector(".empty-state");
+            if (empty) empty.remove();
+            messageList.append(row);
+            row.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+
+        async function request(path, options = {}) {
+            if (!API_BASE) throw new Error("未配置 API_BASE。");
+            const response = await fetch(`${API_BASE}${path}`, {
+                ...options,
+                headers: { Accept: "application/json", ...(options.headers || {}) }
+            });
+            let payload;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                throw new Error("服务返回了无法解析的响应。");
+            }
+            if (!response.ok || payload.code !== "0000") {
+                throw new Error(payload.info || `请求失败（HTTP ${response.status}）。`);
+            }
+            return payload;
+        }
+
+        function selectedAgent() {
+            const option = agentSelect.selectedOptions[0];
+            if (!option || !option.value) throw new Error("请选择一个智能体。");
+            return option;
+        }
+
+        function updateAgentDetails() {
+            const option = selectedAgent();
+            currentSessionId = null;
+            sessionIdLabel.textContent = "尚未创建会话";
+            agentDescription.textContent = option.dataset.description || "该智能体已准备好接收消息。";
+            title.textContent = option.textContent;
+            subtitle.textContent = "会话创建后将复用当前上下文。";
+            renderEmptyState();
+        }
+
+        function setBusy(value) {
+            busy = value;
+            agentSelect.disabled = value || !agentSelect.options.length;
+            newSessionButton.disabled = value || !agentSelect.options.length;
+            messageInput.disabled = value || !agentSelect.options.length;
+            sendButton.disabled = value || !agentSelect.options.length;
+            sendButton.textContent = value ? "处理中" : "发送";
+        }
+
+        async function createSession(announce = true) {
+            const agent = selectedAgent();
+            const payload = await request("/api/v1/create_session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agentId: agent.value, userId: login.user })
+            });
+            currentSessionId = payload.data.sessionId;
+            sessionIdLabel.textContent = currentSessionId;
+            if (announce) appendMessage("system", "已创建当前会话。");
+            return currentSessionId;
+        }
+
+        async function loadAgents() {
+            const payload = await request("/api/v1/query_ai_agent_config_list");
+            const agents = Array.isArray(payload.data) ? payload.data : [];
+            if (!agents.length) throw new Error("当前没有可用的智能体配置。");
+            agentSelect.replaceChildren();
+            for (const agent of agents) {
+                const option = new Option(agent.agentName, agent.agentId);
+                option.dataset.description = agent.agentDesc || "";
+                agentSelect.add(option);
+            }
+            updateAgentDetails();
+            setBusy(false);
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || busy) return;
+            setBusy(true);
+            try {
+                const sessionId = currentSessionId || await createSession(false);
+                appendMessage("user", message);
+                messageInput.value = "";
+                const agent = selectedAgent();
+                const payload = await request("/api/v1/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ agentId: agent.value, userId: login.user, sessionId, message })
+                });
+                appendMessage("agent", payload.data.content || "智能体没有返回可显示的内容。");
+            } catch (error) {
+                appendMessage("system", error.message || "发送消息时发生错误。", true);
+            } finally {
+                setBusy(false);
+                messageInput.focus();
+            }
+        }
+
+        login = readLogin();
+        if (!login) {
+            window.location.replace("login.html");
+            return;
+        }
+
+        profileName.textContent = login.user;
+        profileAvatar.textContent = login.user.slice(0, 1).toUpperCase();
+        renderEmptyState();
+        loadAgents().catch((error) => {
+            agentSelect.replaceChildren(new Option("无法加载智能体", ""));
+            agentDescription.textContent = "请确认后端服务和 API_BASE 配置。";
+            appendMessage("system", error.message || "加载智能体失败。", true);
+        });
+
+        agentSelect.addEventListener("change", () => {
+            try {
+                updateAgentDetails();
+            } catch (error) {
+                appendMessage("system", error.message, true);
+            }
+        });
+
+        newSessionButton.addEventListener("click", async () => {
+            if (busy) return;
+            setBusy(true);
+            try {
+                await createSession();
+            } catch (error) {
+                appendMessage("system", error.message || "创建会话失败。", true);
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        composer.addEventListener("submit", (event) => {
+            event.preventDefault();
+            sendMessage();
+        });
+
+        messageInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        logoutButton.addEventListener("click", () => {
+            clearLoginCookie();
+            window.location.assign("login.html");
+        });
+    })();
+</script>
+</body>
+</html>
