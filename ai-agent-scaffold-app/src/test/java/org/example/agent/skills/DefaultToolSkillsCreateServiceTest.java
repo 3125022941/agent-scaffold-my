@@ -36,22 +36,17 @@ class DefaultToolSkillsCreateServiceTest {
         URLClassLoader jarClassLoader = null;
         try {
             try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {
-                output.putNextEntry(new JarEntry("agent/"));
-                output.closeEntry();
-                output.putNextEntry(new JarEntry("agent/skills/"));
-                output.closeEntry();
-                output.putNextEntry(new JarEntry("agent/skills/jar-backed/"));
-                output.closeEntry();
-                output.putNextEntry(new JarEntry("agent/skills/jar-backed/SKILL.md"));
-                output.write("""
-                        ---
-                        name: jar-backed
-                        description: Skill loaded from a JAR
-                        ---
-
-                        Execute the JAR-backed skill.
-                        """.getBytes(StandardCharsets.UTF_8));
-                output.closeEntry();
+                addDirectory(output, "agent/");
+                addDirectory(output, "agent/skills/");
+                addDirectory(output, "agent/skills/example/");
+                addDirectory(output, "agent/skills/team/");
+                addDirectory(output, "agent/skills/team/agent/");
+                addDirectory(output, "agent/skills/team/agent/skills/");
+                addDirectory(output, "agent/skills/team/agent/skills/example/");
+                addDirectory(output, "agent/skills/plus+directory/");
+                addSkill(output, "agent/skills/example/SKILL.md", "direct-skill");
+                addSkill(output, "agent/skills/team/agent/skills/example/SKILL.md", "nested-skill");
+                addSkill(output, "agent/skills/plus+directory/SKILL.md", "plus-skill");
             }
 
             jarClassLoader = new URLClassLoader(new URL[]{jar.toUri().toURL()}, null);
@@ -61,6 +56,10 @@ class DefaultToolSkillsCreateServiceTest {
             ToolCallback[] callbacks = assertDoesNotThrow(
                     () -> service.buildToolCallback(skills("resource", "agent/skills")));
             assertTrue(callbacks.length > 0);
+            String description = callbacks[0].getToolDefinition().description();
+            assertTrue(description.contains("direct-skill"));
+            assertTrue(description.contains("nested-skill"));
+            assertTrue(callbacks[0].call("{\"command\":\"plus-skill\"}").contains("plus+directory"));
         } finally {
             Thread.currentThread().setContextClassLoader(originalClassLoader);
             if (jarClassLoader != null) {
@@ -85,5 +84,23 @@ class DefaultToolSkillsCreateServiceTest {
         skills.setType(type);
         skills.setPath(path);
         return skills;
+    }
+
+    private void addDirectory(JarOutputStream output, String path) throws IOException {
+        output.putNextEntry(new JarEntry(path));
+        output.closeEntry();
+    }
+
+    private void addSkill(JarOutputStream output, String path, String name) throws IOException {
+        output.putNextEntry(new JarEntry(path));
+        output.write("""
+                ---
+                name: %s
+                description: Skill loaded from a JAR
+                ---
+
+                Execute the JAR-backed skill.
+                """.formatted(name).getBytes(StandardCharsets.UTF_8));
+        output.closeEntry();
     }
 }

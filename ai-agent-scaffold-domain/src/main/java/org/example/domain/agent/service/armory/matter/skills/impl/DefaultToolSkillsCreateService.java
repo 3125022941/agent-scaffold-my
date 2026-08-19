@@ -11,11 +11,13 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.Enumeration;
 
 @Service
 public class DefaultToolSkillsCreateService implements ToolSkillsCreateService {
@@ -36,6 +38,7 @@ public class DefaultToolSkillsCreateService implements ToolSkillsCreateService {
 
     private String materializeSkillsResource(String resourcePath) {
         String normalizedPath = trimSlashes(resourcePath);
+        Path temporaryDirectory = null;
         try {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             if (classLoader == null) {
@@ -47,9 +50,9 @@ public class DefaultToolSkillsCreateService implements ToolSkillsCreateService {
                 throw new IllegalArgumentException("No SKILL.md files found for tool skills resource path: " + resourcePath);
             }
 
-            Path temporaryDirectory = Files.createTempDirectory("agent-skills-");
+            temporaryDirectory = Files.createTempDirectory("agent-skills-");
             for (Resource skillResource : skillResources) {
-                Path target = temporaryDirectory.resolve(relativeSkillPath(skillResource, normalizedPath)).normalize();
+                Path target = temporaryDirectory.resolve(relativeSkillPath(skillResource, normalizedPath, classLoader)).normalize();
                 if (!target.startsWith(temporaryDirectory)) {
                     throw new IllegalStateException("Invalid skill resource path: " + skillResource);
                 }
@@ -61,24 +64,81 @@ public class DefaultToolSkillsCreateService implements ToolSkillsCreateService {
             registerForDeletionOnExit(temporaryDirectory);
             return temporaryDirectory.toString();
         } catch (IOException ex) {
+            cleanupMaterializedSkills(temporaryDirectory, ex);
             throw new IllegalStateException("Failed to materialize tool skills resource path: " + resourcePath, ex);
+        } catch (RuntimeException ex) {
+            cleanupMaterializedSkills(temporaryDirectory, ex);
+            throw ex;
         }
     }
 
-    private String relativeSkillPath(Resource skillResource, String resourcePath) throws IOException {
-        String decodedPath = URLDecoder.decode(skillResource.getURL().getPath(), StandardCharsets.UTF_8);
-        String marker = resourcePath + "/";
-        int markerIndex = decodedPath.lastIndexOf(marker);
-        if (markerIndex < 0) {
+    private Path relativeSkillPath(Resource skillResource, String resourcePath, ClassLoader classLoader) throws IOException {
+        URL skillUrl = skillResource.getURL();
+        if ("jar".equals(skillUrl.getProtocol())) {
+            String resourceEntryPath = skillUrl.toExternalForm();
+            int separatorIndex = resourceEntryPath.lastIndexOf("!/");
+            if (separatorIndex < 0) {
+                throw new IllegalStateException("Invalid JAR skill resource URL: " + skillUrl);
+            }
+            return Path.of(removeResourceRoot(
+                    decodeUriPath(resourceEntryPath.substring(separatorIndex + 2)), resourcePath, skillResource));
+        }
+        if ("file".equals(skillUrl.getProtocol())) {
+            return relativeFileSkillPath(skillResource, resourcePath, classLoader);
+        }
+        throw new IllegalStateException("Unsupported skill resource URL protocol: " + skillUrl.getProtocol());
+    }
+
+    private Path relativeFileSkillPath(Resource skillResource, String resourcePath, ClassLoader classLoader) throws IOException {
+        Path skillPath = Paths.get(skillResource.getURI());
+        Enumeration<URL> resourceRoots = classLoader.getResources(resourcePath);
+        while (resourceRoots.hasMoreElements()) {
+            URL resourceRoot = resourceRoots.nextElement();
+            if ("file".equals(resourceRoot.getProtocol())) {
+                Path rootPath = Paths.get(URI.create(resourceRoot.toExternalForm()));
+                if (skillPath.startsWith(rootPath)) {
+                    return rootPath.relativize(skillPath);
+                }
+            }
+        }
+        throw new IllegalStateException("Skill resource is outside configured path: " + skillResource);
+    }
+
+    private String removeResourceRoot(String resourceEntryPath, String resourcePath, Resource skillResource) {
+        String resourceRoot = resourcePath + "/";
+        if (!resourceEntryPath.startsWith(resourceRoot)) {
             throw new IllegalStateException("Skill resource is outside configured path: " + skillResource);
         }
-        return decodedPath.substring(markerIndex + marker.length());
+        return resourceEntryPath.substring(resourceRoot.length());
+    }
+
+    private String decodeUriPath(String path) {
+        return URI.create("file:/" + path).getPath().substring(1);
+    }
+
+    private void cleanupMaterializedSkills(Path directory, Exception failure) {
+        if (directory == null) {
+            return;
+        }
+        try {
+            deleteRecursively(directory);
+        } catch (IOException cleanupFailure) {
+            failure.addSuppressed(cleanupFailure);
+        }
     }
 
     private void registerForDeletionOnExit(Path directory) throws IOException {
         try (var paths = Files.walk(directory)) {
             paths.sorted(Comparator.comparingInt(Path::getNameCount))
                     .forEach(path -> path.toFile().deleteOnExit());
+        }
+    }
+
+    private void deleteRecursively(Path directory) throws IOException {
+        try (var paths = Files.walk(directory)) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(path);
+            }
         }
     }
 
