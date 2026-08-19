@@ -10,6 +10,7 @@ import org.example.domain.agent.service.armory.AbstractArmorySupport;
 import org.example.domain.agent.service.armory.factory.DefaultArmoryFactory;
 import org.example.domain.agent.service.armory.matter.mcp.client.ToolMcpCreateService;
 import org.example.domain.agent.service.armory.matter.mcp.client.factory.DefaultMcpClientFactory;
+import org.example.domain.agent.service.armory.matter.skills.ToolSkillsCreateService;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 import org.springframework.ai.chat.model.ChatModel;
@@ -27,6 +28,8 @@ public class ChatModelNode extends AbstractArmorySupport {
     private AgentNode agentNode;
     @Resource
     private DefaultMcpClientFactory defaultMcpClientFactory;
+    @Resource
+    private ToolSkillsCreateService toolSkillsCreateService;
 
     @Override
     protected AiAgentRegisterVO doApply(ArmoryCommandEntity requestParameter, DefaultArmoryFactory.DynamicContext dynamicContext) throws Exception {
@@ -40,6 +43,8 @@ public class ChatModelNode extends AbstractArmorySupport {
         //构建mcp服务（工厂）
         List<ToolCallback> toolCallbackList = new ArrayList<>();
         List<AIAgentConfigTableVO.Module.ChatModel.ToolMcp> toolMcpList = chatModelConfig.getToolMcpList();
+        List<AIAgentConfigTableVO.Module.ChatModel.ToolSkills> toolSkillsList = chatModelConfig.getToolSkillsList();
+
         if (toolMcpList != null) {
             for (AIAgentConfigTableVO.Module.ChatModel.ToolMcp toolMcp : toolMcpList) {
                 try {
@@ -49,6 +54,12 @@ public class ChatModelNode extends AbstractArmorySupport {
                 } catch (Exception e) {
                     log.warn("跳过不可用的 MCP 工具，模型将继续启动: {}", e.getMessage());
                 }
+            }
+        }
+        if (null!=toolSkillsList && !toolSkillsList.isEmpty()){
+            for (AIAgentConfigTableVO.Module.ChatModel.ToolSkills toolSkills:toolSkillsList){
+                ToolCallback[] toolCallbacks = toolSkillsCreateService.buildToolCallback(toolSkills);
+                toolCallbackList.addAll(List.of(toolCallbacks));
             }
         }
        //构建对话模型

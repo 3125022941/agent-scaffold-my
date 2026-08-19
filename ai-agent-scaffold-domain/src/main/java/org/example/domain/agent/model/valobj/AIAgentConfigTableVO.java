@@ -43,8 +43,11 @@ public class AIAgentConfigTableVO {
         // 聊天模型相关配置
         @Data
         public static class ChatModel {
+
             private String model;
             private List<ToolMcp> toolMcpList;
+
+            private List<ToolSkills>toolSkillsList;
 
             @Data
             public static class ToolMcp {
@@ -53,6 +56,11 @@ public class AIAgentConfigTableVO {
                 private LocalParameters local;
             }
 
+            @Data
+            public static class ToolSkills{
+                private String type="directory";
+                private String path;
+            }
             @Data
             public static class LocalParameters {
                 private String name;

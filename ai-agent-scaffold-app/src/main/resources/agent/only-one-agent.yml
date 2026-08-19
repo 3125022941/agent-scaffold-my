@@ -27,6 +27,11 @@ ai:
                     base-uri: https://mcp.map.baidu.com/
                     sse-endpoint: sse?ak=${BAIDU_MAP_MCP_AK:}
                     request-timeout: 5000
+                - local:
+                    name:myToolCallbackProvider
+              tool-skills-list:
+                - type: resource
+                  path: agent/skills
             agents:
               - name: onlyAgent
                 description: 小傅哥学习项目计划

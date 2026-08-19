@@ -61,12 +61,23 @@ public class AgentServiceController implements IAgentService {
 
         }
     }
-    @RequestMapping(value = "create_session",method = RequestMethod.GET)
+    @PostMapping("create_session")
     @Override
     public Response<CreateSessionResponseDTO> createSession(@RequestBody CreateSessionRequestDTO requestDTO) {
+        return createSessionResponse(requestDTO.getAgentId(), requestDTO.getUserId());
+    }
+
+    @GetMapping("create_session")
+    public Response<CreateSessionResponseDTO> createSessionByQuery(
+            @RequestParam("agentId") String agentId,
+            @RequestParam("userId") String userId) {
+        return createSessionResponse(agentId, userId);
+    }
+
+    private Response<CreateSessionResponseDTO> createSessionResponse(String agentId, String userId) {
         try {
-            log.info("创建会话 agentId:{} userId:{}", requestDTO.getAgentId(), requestDTO.getUserId());
-            String sessionId = chatService.createSession(requestDTO.getAgentId(), requestDTO.getUserId());
+            log.info("创建会话 agentId:{} userId:{}", agentId, userId);
+            String sessionId = chatService.createSession(agentId, userId);
 
             CreateSessionResponseDTO responseDTO = new CreateSessionResponseDTO();
             responseDTO.setSessionId(sessionId);
@@ -83,7 +94,7 @@ public class AgentServiceController implements IAgentService {
                     .info(e.getInfo())
                     .build();
         } catch (Exception e) {
-            log.error("创建会话失败 agentId:{} userId:{}", requestDTO.getAgentId(), requestDTO.getUserId(), e);
+            log.error("创建会话失败 agentId:{} userId:{}", agentId, userId, e);
             return Response.<CreateSessionResponseDTO>builder()
                     .code(ResponseCode.UN_ERROR.getCode())
                     .info(ResponseCode.UN_ERROR.getInfo())
