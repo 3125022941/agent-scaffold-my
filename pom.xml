@@ -173,6 +173,18 @@
         </dependencies>
     </dependencyManagement>
 
+    <!-- 发布到阿里云 Maven 私有制品库。
+         注意：真正要发布的是“生成出来的脚手架工程” target/generated-sources/archetype，
+         发布前请把下面这段复制到该工程的 pom.xml。
+         凭据（账号/密码）放在 ~/.m2/settings.xml 的 <servers> 里，<id> 必须与这里一致，不要写进 pom。 -->
+    <distributionManagement>
+        <repository>
+            <id>2402-release-ZIxgz2</id>
+            <url>https://11ff-cn-shanghai.devops.aliyuncs.com/packages/api/protocol/maven/2402-release-zixgz2</url>
+        </repository>
+        <!-- 若以后要发布 SNAPSHOT 版本，需再建一个 snapshot 仓库，并在此追加 <snapshotRepository> -->
+    </distributionManagement>
+
     <build>
         <plugins>
             <plugin>
@@ -191,6 +203,18 @@
                 <version>2.5</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <!-- 生成工程脚手架：执行 mvn archetype:create-from-project 后，
+                 会在 outputDirectory 下生成脚手架工程（artifactId 自动追加 -archetype 后缀，
+                 即 ai-agent-scaffold-archetype）。进入该目录执行 mvn install 打包，
+                 之后即可通过 create-project.sh 使用脚手架创建新项目。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-archetype-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/generated-sources/archetype</outputDirectory>
                 </configuration>
             </plugin>
             <plugin>
