@@ -28,7 +28,7 @@ ai:
                     sse-endpoint: sse?ak=${BAIDU_MAP_MCP_AK:}
                     request-timeout: 5000
                 - local:
-                    name:myToolCallbackProvider
+                    name: myToolCallbackProvider
               tool-skills-list:
                 - type: resource
                   path: agent/skills

@@ -56,8 +56,8 @@ public class ChatModelNode extends AbstractArmorySupport {
                 }
             }
         }
-        if (null!=toolSkillsList && !toolSkillsList.isEmpty()){
-            for (AIAgentConfigTableVO.Module.ChatModel.ToolSkills toolSkills:toolSkillsList){
+        if (toolSkillsList != null) {
+            for (AIAgentConfigTableVO.Module.ChatModel.ToolSkills toolSkills : toolSkillsList) {
                 ToolCallback[] toolCallbacks = toolSkillsCreateService.buildToolCallback(toolSkills);
                 toolCallbackList.addAll(List.of(toolCallbacks));
             }
